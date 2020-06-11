@@ -3,9 +3,14 @@ import shapefile
 import pathlib
 
 from json import dumps
-from shapely.geometry import (mapping, shape)
 from argparse import ArgumentParser
 from sys import stdout, stderr
+try:
+    from shapely.geometry import (mapping, shape)
+    fix_invalid_shape = True
+except Exception:
+    fix_invalid_shape = False
+
 
 
 class ShapeRecordHelper():
@@ -26,9 +31,10 @@ class ShapeRecordHelper():
 
         geom = shapeRecord.shape.__geo_interface__
 
-        sh = shape(geom)
-        if not sh.is_valid:  # fix self intersect
-            geom = mapping(sh.buffer(0))
+        if fix_invalid_shape:
+            sh = shape(geom)
+            if not sh.is_valid:  # fix self intersect
+                geom = mapping(sh.buffer(0))
 
         return dict(type="Feature", geometry=geom, properties=atr)
 
